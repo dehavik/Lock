@@ -5,8 +5,6 @@ if (baseUri.includes("localhost")) {
     redirectUri = "https://dehavik.github.io/MicrosoftKeeoSync";
 }
 
-console.log("redirectUri: " + redirectUri);
-
 /**
  * Configuration object to be passed to MSAL instance on creation. 
  * For a full list of MSAL.js configuration parameters, visit:
