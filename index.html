@@ -2,156 +2,83 @@
 <html lang="en">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Microsoft OAuth Flow with PKCE</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
+  <title>Microsoft identity platform</title>
+  <link rel="SHORTCUT ICON" href="./favicon.svg" type="image/x-icon">
+
+   <!-- msal.min.js can be used in the place of msal.js; included msal.js to make debug easy -->
+  <script src="https://alcdn.msauth.net/browser/2.30.0/js/msal-browser.js"
+    integrity="sha384-o4ufwq3oKqc7IoCcR08YtZXmgOljhTggRwxP2CLbSqeXGtitAxwYaUln/05nJjit"
+    crossorigin="anonymous"></script>
+  
+  <!-- adding Bootstrap 4 for UI components  -->
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
+    integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+  <link rel="SHORTCUT ICON" href="https://c.s-microsoft.com/favicon.ico?v2" type="image/x-icon">
 </head>
 
 <body>
-    <h1>Microsoft OAuth 2.0 Flow with PKCE</h1>
-    <button id="login-button">Login with Microsoft</button>
-    <div id="user-list"></div> <!-- Div to display the list of users -->
+  <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+    <a class="navbar-brand" href="/">Microsoft identity platform</a>
+    <div class="btn-group ml-auto dropleft">
+      <button type="button" id="SignIn" class="btn btn-secondary" onclick="signIn()">
+        Sign In
+      </button>
+    </div>
+  </nav>
+  <br>
+  <h5 class="card-header text-center">Vanilla JavaScript SPA calling MS Graph API with MSAL.js</h5>
+  <br>
+  <div class="row" style="margin:auto">
+    <div id="card-div" class="col-md-3" style="display:none">
+      <div class="card text-center">
+        <div class="card-body">
+          <h5 class="card-title" id="WelcomeMessage">Please sign-in to see your profile and read your mails</h5>
+          <div id="profile-div"></div>
+          <br>
+          <br>
+          <button class="btn btn-primary" id="seeProfile" onclick="seeProfile()">See Profile</button>
+          <br>
+          <br>
+          <button class="btn btn-primary" id="readMail" onclick="readMail()">Read Mails</button>
+        </div>
+      </div>
+    </div>
+    <br>
+    <br>
+    <div class="col-md-4">
+      <div class="list-group" id="list-tab" role="tablist">
+      </div>
+    </div>
+    <div class="col-md-5">
+      <div class="tab-content" id="nav-tabContent">
+      </div>
+    </div>
+  </div>
+  <br>
+  <br>
 
-    <script>
-        const tenant = '7bad5a3a-3e76-4559-bcf6-8a6039c7f8d2'; // Replace with your tenant ID
-        const clientId = '17db1aab-b6e3-4156-86b6-ee24be24dcca'; // Replace with your client ID
-        const redirectUri = 'http://localhost:5500/index.html'; //dehavik.github.io/MicrosoftKeeoSync/index.html';
-        const scope = 'offline_access User.Read.All'; // Updated scope to include User.Read.All
-        
-        // GENERATING CODE VERIFIER
-        function dec2hex(dec) {
-            return ("0" + dec.toString(16)).substr(-2);
-        }
-        function generateCodeVerifier() {
-            var array = new Uint32Array(56 / 2);
-            window.crypto.getRandomValues(array);
-            return Array.from(array, dec2hex).join("");
-        }
+  <!-- importing bootstrap.js and supporting js libraries -->
+  <script src="https://code.jquery.com/jquery-3.4.1.slim.min.js"
+    integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n"
+    crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"
+    integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo"
+    crossorigin="anonymous"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"
+    integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6"
+    crossorigin="anonymous"></script>
 
-        // GENERATING CODE CHALLENGE FROM VERIFIER
-        function sha256(plain) {
-            // returns promise ArrayBuffer
-            const encoder = new TextEncoder();
-            const data = encoder.encode(plain);
-            return window.crypto.subtle.digest("SHA-256", data);
-        }
+  <!-- importing app scripts (load order is important) -->
+  <script type="text/javascript" src="./authConfig.js"></script>
+  <script type="text/javascript" src="./graphConfig.js"></script>
+  <script type="text/javascript" src="./ui.js"></script>
 
-        function base64urlencode(a) {
-            var str = "";
-            var bytes = new Uint8Array(a);
-            var len = bytes.byteLength;
-            for (var i = 0; i < len; i++) {
-                str += String.fromCharCode(bytes[i]);
-            }
-            return btoa(str)
-                .replace(/\+/g, "-")
-                .replace(/\//g, "_")
-                .replace(/=+$/, "");
-        }
-
-        async function generateCodeChallengeFromVerifier(v) {
-            var hashed = await sha256(v);
-            var base64encoded = base64urlencode(hashed);
-            return base64encoded;
-        }
-
-        let codeVerifier = '';
-        let state = '';
-        console.log('code_verifierX', sessionStorage.getItem('code_verifierX'));
-        if (sessionStorage.getItem('code_verifierX') === null) {
-            console.log('new code verifier and state');
-            sessionStorage.setItem('code_verifierX', generateCodeVerifier());
-            sessionStorage.setItem('stateX', Math.random().toString(36).substring(2));
-        } else {
-            console.log('reusing code verifier and state');
-        }
-        codeVerifier = sessionStorage.getItem('code_verifierX');
-        state = sessionStorage.getItem('stateX');
-
-        // Generate code challenge
-        generateCodeChallengeFromVerifier(codeVerifier).then(codeChallenge => {
-            console.log('codeChallenge', codeChallenge);
-
-            document.getElementById('login-button').onclick = () => {
-                // Step 1: Redirect to authorization endpoint with code challenge
-                const authUrl = `https://login.microsoftonline.com/${tenant}/oauth2/v2.0/authorize?client_id=${clientId}&response_type=code&redirect_uri=${encodeURIComponent(redirectUri)}&response_mode=query&scope=${encodeURIComponent(scope)}&state=${state}&code_challenge=${codeChallenge}&code_challenge_method=S256`;
-                window.location.href = authUrl;
-            };
-        });
-
-        // Function to handle the token request
-        async function requestAccessToken(code) {
-            const tokenUrl = `https://login.microsoftonline.com/${tenant}/oauth2/v2.0/token`;
-            const body = new URLSearchParams({
-                client_id: clientId,
-                scope: scope,
-                code: code,
-                redirect_uri: redirectUri,
-                grant_type: 'authorization_code',
-                code_verifier: codeVerifier // Include the code verifier here
-            });
-
-            const response = await fetch(tokenUrl, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded'
-                },
-                body: body.toString()
-            });
-            return await response.json();
-        }
-
-        // Check for the response parameters after redirection
-        const urlParams = new URLSearchParams(window.location.search);
-        const code = urlParams.get('code');
-        const returnedState = urlParams.get('state');
-
-        // Verify that the state values match
-        if (code && returnedState) {
-            if (returnedState !== state) {
-                console.error('State values do not match!');
-            } else {
-                // Step 3: Request the access token
-                requestAccessToken(code)
-                    .then(data => {
-                        console.log('Access Token Response:', data);
-                        const accessToken = data.access_token;
-
-                        // Step 4: Use the access token to call the Graph API to get users
-                        fetch('https://graph.microsoft.com/v1.0/users', {
-                            method: 'GET',
-                            headers: {
-                                'Authorization': `Bearer ${accessToken}`
-                            }
-                        })
-                            .then(response => response.json())
-                            .then(userData => {
-                                console.log('User Data:', userData);
-                                displayUsers(userData.value); // Call function to display users
-                            })
-                            .catch(err => console.error('Error fetching user data:', err));
-                    })
-                    .catch(err => console.error('Error fetching access token:', err));
-            }
-        }
-
-        // Function to display the list of users
-        function displayUsers(users) {
-            const userListDiv = document.getElementById('user-list');
-            userListDiv.innerHTML = '<h2>List of Users:</h2>'; // Header for user list
-            if (users.length === 0) {
-                userListDiv.innerHTML += '<p>No users found.</p>'; // Message for no users
-            } else {
-                const ul = document.createElement('ul');
-                users.forEach(user => {
-                    const li = document.createElement('li');
-                    li.textContent = user.displayName; // Display user's name
-                    ul.appendChild(li);
-                });
-                userListDiv.appendChild(ul); // Append user list to the div
-            }
-        }
-    </script>
+  <!-- <script type="text/javascript" src="./authRedirect.js"></script>   -->
+  <!-- uncomment the above line and comment the line below if you would like to use the redirect flow -->
+  <script type="text/javascript" src="./authPopup.js"></script>
+  <script type="text/javascript" src="./graph.js"></script>
 </body>
 
 </html>
