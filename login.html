@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Microsoft OAuth Flow with PKCE</title>
+</head>
+
+<body>
+    <h1>Microsoft OAuth 2.0 Flow with PKCE</h1>
+    <button id="login-button">Login with Microsoft</button>
+
+    <script>
+        const tenant = '7bad5a3a-3e76-4559-bcf6-8a6039c7f8d2'; // Replace with your tenant ID
+        const clientId = '17db1aab-b6e3-4156-86b6-ee24be24dcca'; // Replace with your client ID
+        const redirectUri = 'http://localhost:5500/user-list.html'; // Page to redirect after login
+        const scope = 'offline_access User.Read.All'; // Updated scope to include User.Read.All
+        
+        // GENERATING CODE VERIFIER
+        function dec2hex(dec) {
+            return ("0" + dec.toString(16)).substr(-2);
+        }
+        function generateCodeVerifier() {
+            var array = new Uint32Array(56 / 2);
+            window.crypto.getRandomValues(array);
+            return Array.from(array, dec2hex).join("");
+        }
+
+        // GENERATING CODE CHALLENGE FROM VERIFIER
+        function sha256(plain) {
+            const encoder = new TextEncoder();
+            const data = encoder.encode(plain);
+            return window.crypto.subtle.digest("SHA-256", data);
+        }
+
+        function base64urlencode(a) {
+            var str = "";
+            var bytes = new Uint8Array(a);
+            var len = bytes.byteLength;
+            for (var i = 0; i < len; i++) {
+                str += String.fromCharCode(bytes[i]);
+            }
+            return btoa(str)
+                .replace(/\+/g, "-")
+                .replace(/\//g, "_")
+                .replace(/=+$/, "");
+        }
+
+        async function generateCodeChallengeFromVerifier(v) {
+            var hashed = await sha256(v);
+            var base64encoded = base64urlencode(hashed);
+            return base64encoded;
+        }
+        
+        let accessToken = sessionStorage.getItem('my_access_token');
+        // check if access token is still valid
+        if (accessToken) {
+            const expiry = sessionStorage.getItem('my_token_expiry');
+            if (expiry > Date.now()) {
+                // Access token is still valid
+                console.log('Access token is still valid');
+                // Redirect to user-list.html
+                window.location.href = 'http://localhost:5500/user-list.html';
+            }
+        }
+
+        let codeVerifier = generateCodeVerifier();
+        let state = Math.random().toString(36).substring(2);
+        sessionStorage.setItem('my_code_verifier', codeVerifier);
+        sessionStorage.setItem('my_state', state);
+
+        // Generate code challenge
+        generateCodeChallengeFromVerifier(codeVerifier).then(codeChallenge => {
+            document.getElementById('login-button').onclick = () => {
+                const authUrl = `https://login.microsoftonline.com/${tenant}/oauth2/v2.0/authorize?client_id=${clientId}&response_type=code&redirect_uri=${encodeURIComponent(redirectUri)}&response_mode=query&scope=${encodeURIComponent(scope)}&state=${state}&code_challenge=${codeChallenge}&code_challenge_method=S256`;
+                window.location.href = authUrl;
+            };
+        });
+    </script>
+</body>
+
+</html>

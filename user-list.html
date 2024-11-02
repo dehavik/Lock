@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User List</title>
+</head>
+
+<body>
+    <h1>User List</h1>
+    <div id="user-list"></div> <!-- Div to display the list of users -->
+
+    <script>
+        // Function to handle the token request
+        async function requestAccessToken(code, codeVerifier) {
+            const tokenUrl = `https://login.microsoftonline.com/${tenant}/oauth2/v2.0/token`;
+            const body = new URLSearchParams({
+                client_id: clientId,
+                scope: scope,
+                code: code,
+                redirect_uri: redirectUri,
+                grant_type: 'authorization_code',
+                code_verifier: codeVerifier // Include the code verifier here
+            });
+
+            const response = await fetch(tokenUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                },
+                body: body.toString()
+            });
+            return await response.json();
+        }
+
+
+        const tenant = '7bad5a3a-3e76-4559-bcf6-8a6039c7f8d2'; // Replace with your tenant ID
+        const clientId = '17db1aab-b6e3-4156-86b6-ee24be24dcca'; // Replace with your client ID
+        const redirectUri = 'http://localhost:5500/user-list.html'; // Same as above
+        const scope = 'offline_access User.Read.All'; // Updated scope to include User.Read.All
+
+        const accessToken = sessionStorage.getItem('my_access_token');
+        const expiry = sessionStorage.getItem('my_token_expiry');
+
+        if (accessToken && expiry > Date.now()) {
+            getUserDataAndDisplayIt(accessToken);
+        } else {
+
+            let state = sessionStorage.getItem('my_state');
+            let codeVerifier = sessionStorage.getItem('my_code_verifier');
+
+
+
+            // Check for the response parameters after redirection
+            const urlParams = new URLSearchParams(window.location.search);
+            const code = urlParams.get('code');
+            const returnedState = urlParams.get('state');
+
+
+
+            if (code && returnedState) {
+                if (returnedState !== state) {
+                    console.error('State values do not match!');
+                    window.location.href = 'http://localhost:5500/login.html';
+                } else {
+                    requestAccessToken(code, codeVerifier)
+                        .then(data => {
+                            const accessToken = data.access_token;
+                            const expiresIn = data.expires_in;
+                            // temporary store the access token in session storage
+                            sessionStorage.setItem('my_access_token', accessToken);
+                            sessionStorage.setItem('my_token_expiry', Date.now() + (expiresIn * 1000));
+
+                            getUserDataAndDisplayIt(accessToken);
+                        })
+                        .catch(err => console.error('Error fetching access token:', err));
+                }
+            } else {
+                // navigate to login page
+                window.location.href = 'http://localhost:5500/login.html';
+            }
+        }
+        // Function to display the list of users
+        function displayUsers(users) {
+            const userListDiv = document.getElementById('user-list');
+            userListDiv.innerHTML = '<h2>List of Users:</h2>'; // Header for user list
+            if (users.length === 0) {
+                userListDiv.innerHTML += '<p>No users found.</p>'; // Message for no users
+            } else {
+                const ul = document.createElement('ul');
+                users.forEach(user => {
+                    const li = document.createElement('li');
+                    li.textContent = user.displayName; // Display user's name
+                    ul.appendChild(li);
+                });
+                userListDiv.appendChild(ul); // Append user list to the div
+            }
+        }
+
+        function getUserDataAndDisplayIt(accessToken) {
+            // Use the access token to call the Graph API to get users
+            fetch('https://graph.microsoft.com/v1.0/users', {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${accessToken}`
+                }
+            })
+                .then(response => response.json())
+                .then(userData => {
+                    displayUsers(userData.value); // Call function to display users
+                })
+                .catch(err => console.error('Error fetching user data:', err));
+        }
+    </script>
+</body>
+
+</html>
