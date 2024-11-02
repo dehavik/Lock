@@ -9,8 +9,8 @@ const msalConfig = {
         clientId: "46d7444f-21d4-4419-9151-af663f76510b",
         // Full directory URL, in the form of https://login.microsoftonline.com/<tenant-id>
         authority: "https://login.microsoftonline.com/7bad5a3a-3e76-4559-bcf6-8a6039c7f8d2",
-        // Full redirect URL, in form of http://localhost:3000
-        redirectUri: "http://localhost:5501/",
+        // Full redirect URL, in form of http://localhost:5500
+        redirectUri: "https://dehavik.github.io/MicrosftKeeoSync",
     },
     cache: {
         cacheLocation: "sessionStorage", // This configures where your cache will be stored
