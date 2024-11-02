@@ -1,3 +1,10 @@
+baseUri =  window.location.origin;
+if (baseUri.includes("localhost")) {
+    redirectUri = baseUri;
+} else {
+    redirectUri = "https://dehavik.github.io/MicrosoftKeeoSync";
+}
+
 
 /**
  * Configuration object to be passed to MSAL instance on creation. 
@@ -10,7 +17,7 @@ const msalConfig = {
         clientId: "46d7444f-21d4-4419-9151-af663f76510b",
         // Full directory URL, in the form of https://login.microsoftonline.com/<tenant-id>
         authority: "https://login.microsoftonline.com/7bad5a3a-3e76-4559-bcf6-8a6039c7f8d2",
-        redirectUri: window.location.origin, // retrieve redirect URI from the current window location (either localhost or production)
+        redirectUri: redirectUri,
     },
     cache: {
         cacheLocation: "sessionStorage", // This configures where your cache will be stored
