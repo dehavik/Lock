@@ -1,15 +1,81 @@
 <!DOCTYPE html>
 <html lang="en">
-<script src="https://alcdn.msauth.net/browser/2.23.0/js/msal-browser.min.js"></script>
 <head>
     <meta charset="UTF-8">
-    <title>Microsoft 365 Users</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Microsoft OAuth Flow</title>
 </head>
 <body>
-    <h1>Microsoft 365 Users</h1>
-    <button id="login-button">Log in with Microsoft</button>
-    <ul id="user-list"></ul>
+    <h1>Microsoft OAuth 2.0 Flow</h1>
+    <button id="login-button">Login with Microsoft</button>
 
-    <script src="script.js"></script>
+    <script>
+        const tenant = '7bad5a3a-3e76-4559-bcf6-8a6039c7f8d2'; // Replace with your tenant ID
+        const clientId = '17db1aab-b6e3-4156-86b6-ee24be24dcca'; // Replace with your client ID
+        const redirectUri = 'file:///Users/benjamin/Development/DeHavik/MicrosoftKeeoSync/index.html';
+        const scope = 'offline_access User.Read Mail.Read';
+        let state = Math.random().toString(36).substring(2); // Generate random state
+
+        document.getElementById('login-button').onclick = () => {
+            // Step 1: Redirect to authorization endpoint
+            const authUrl = `https://login.microsoftonline.com/${tenant}/oauth2/v2.0/authorize?client_id=${clientId}&response_type=code&redirect_uri=${encodeURIComponent(redirectUri)}&response_mode=query&scope=${encodeURIComponent(scope)}&state=${state}`;
+            window.location.href = authUrl;
+        };
+
+        // Function to handle the token request
+        async function requestAccessToken(code) {
+            const tokenUrl = `https://login.microsoftonline.com/${tenant}/oauth2/v2.0/token`;
+            const body = new URLSearchParams({
+                client_id: clientId,
+                scope: scope,
+                code: code,
+                redirect_uri: redirectUri,
+                grant_type: 'authorization_code',
+            });
+
+            const response = await fetch(tokenUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                },
+                body: body.toString()
+            });
+            return await response.json();
+        }
+
+        // Check for the response parameters after redirection
+        const urlParams = new URLSearchParams(window.location.search);
+        const code = urlParams.get('code');
+        const returnedState = urlParams.get('state');
+
+        // Verify that the state values match
+        if (code && returnedState) {
+            if (returnedState !== state) {
+                console.error('State values do not match!');
+            } else {
+
+                // Step 3: Request the access token
+                requestAccessToken(code)
+                    .then(data => {
+                        console.log('Access Token Response:', data);
+                        const accessToken = data.access_token;
+
+                        // Step 4: Use the access token to call the Graph API
+                        fetch('https://graph.microsoft.com/v1.0/me', {
+                            method: 'GET',
+                            headers: {
+                                'Authorization': `Bearer ${accessToken}`
+                            }
+                        })
+                        .then(response => response.json())
+                        .then(userData => {
+                            console.log('User Data:', userData);
+                        })
+                        .catch(err => console.error('Error fetching user data:', err));
+                    })
+                    .catch(err => console.error('Error fetching access token:', err));
+            }
+        }
+    </script>
 </body>
 </html>
