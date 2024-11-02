@@ -80,14 +80,19 @@
                 }
         }
 
-        // Helper functions
+        // Helper Functions
         function generateRandomString(length) {
-            const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-            let result = '';
+            const charset = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~';
+            let randomString = '';
             for (let i = 0; i < length; i++) {
-                result += characters.charAt(Math.floor(Math.random() * characters.length));
+                const randomIndex = Math.floor(Math.random() * charset.length);
+                randomString += charset[randomIndex];
             }
-            return result;
+            return randomString;
+        }
+
+        function base64UrlEncode(str) {
+            return btoa(String.fromCharCode.apply(null, str)).replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
         }
 
         async function sha256(plain) {
@@ -95,13 +100,6 @@
             const data = encoder.encode(plain);
             const hash = await crypto.subtle.digest('SHA-256', data);
             return new Uint8Array(hash);
-        }
-
-        function base64UrlEncode(buffer) {
-            return btoa(String.fromCharCode.apply(null, buffer))
-                .replace(/\+/g, '-')
-                .replace(/\//g, '_')
-                .replace(/=+$/, '');
         }
     </script>
 </body>
