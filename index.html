@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Microsoft OAuth Flow</title>
+    <title>Microsoft OAuth Flow with PKCE</title>
 </head>
 <body>
-    <h1>Microsoft OAuth 2.0 Flow</h1>
+    <h1>Microsoft OAuth 2.0 Flow with PKCE</h1>
     <button id="login-button">Login with Microsoft</button>
 
     <script>
@@ -15,10 +15,12 @@
         const redirectUri = 'https://dehavik.github.io/MicrosoftKeeoSync/index.html';
         const scope = 'offline_access User.Read Mail.Read';
         let state = Math.random().toString(36).substring(2); // Generate random state
+        let codeVerifier = generateRandomString(128);
+        let codeChallenge = base64UrlEncode(sha256(codeVerifier));
 
         document.getElementById('login-button').onclick = () => {
-            // Step 1: Redirect to authorization endpoint
-            const authUrl = `https://login.microsoftonline.com/${tenant}/oauth2/v2.0/authorize?client_id=${clientId}&response_type=code&redirect_uri=${encodeURIComponent(redirectUri)}&response_mode=query&scope=${encodeURIComponent(scope)}&state=${state}`;
+            // Step 1: Redirect to authorization endpoint with code challenge
+            const authUrl = `https://login.microsoftonline.com/${tenant}/oauth2/v2.0/authorize?client_id=${clientId}&response_type=code&redirect_uri=${encodeURIComponent(redirectUri)}&response_mode=query&scope=${encodeURIComponent(scope)}&state=${state}&code_challenge=${codeChallenge}&code_challenge_method=S256`;
             window.location.href = authUrl;
         };
 
@@ -31,6 +33,7 @@
                 code: code,
                 redirect_uri: redirectUri,
                 grant_type: 'authorization_code',
+                code_verifier: codeVerifier // Include the code verifier here
             });
 
             const response = await fetch(tokenUrl, {
@@ -74,7 +77,31 @@
                         .catch(err => console.error('Error fetching user data:', err));
                     })
                     .catch(err => console.error('Error fetching access token:', err));
+                }
+        }
+
+        // Helper functions
+        function generateRandomString(length) {
+            const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+            let result = '';
+            for (let i = 0; i < length; i++) {
+                result += characters.charAt(Math.floor(Math.random() * characters.length));
             }
+            return result;
+        }
+
+        async function sha256(plain) {
+            const encoder = new TextEncoder();
+            const data = encoder.encode(plain);
+            const hash = await crypto.subtle.digest('SHA-256', data);
+            return new Uint8Array(hash);
+        }
+
+        function base64UrlEncode(buffer) {
+            return btoa(String.fromCharCode.apply(null, buffer))
+                .replace(/\+/g, '-')
+                .replace(/\//g, '_')
+                .replace(/=+$/, '');
         }
     </script>
 </body>
