@@ -59,11 +59,13 @@
   <br>
   <br>
   <div class="container">
-    <div class="form-group">
-      <label for="apiKey">Enter your API Key:</label>
-      <input type="password" class="form-control" id="apiKey" placeholder="API Key">
-    </div>
-    <button class="btn btn-primary" onclick="makeApiRequest()">Make API Request</button>
+    <form onsubmit="makeApiRequest(); return false;">
+      <div class="form-group">
+        <label for="apiKey">Enter your API Key:</label>
+        <input type="password" class="form-control" id="apiKey" name="api_key" placeholder="API Key">
+      </div>
+      <button type="submit" class="btn btn-primary">Make API Request</button>
+    </form>
   </div>
   <br>
   <div class="container">
