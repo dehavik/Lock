@@ -13,7 +13,7 @@ if (baseUri.includes("localhost")) {
 const msalConfig = {
     auth: {
         // 'Application (client) ID' of app registration in Azure portal - this value is a GUID
-        clientId: "46d7444f-21d4-4419-9151-af663f76510b",
+        clientId: "945351f2-1778-4768-a475-ae9c490868b5",
         // Full directory URL, in the form of https://login.microsoftonline.com/<tenant-id>
         authority: "https://login.microsoftonline.com/7bad5a3a-3e76-4559-bcf6-8a6039c7f8d2",
         redirectUri: redirectUri,
