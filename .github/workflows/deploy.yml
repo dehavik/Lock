@@ -39,6 +39,13 @@ jobs:
         run: npm ci
       - name: Build
         run: npm run build
+      - name: Ensure 404.html is in output directory
+        run: |
+          # Ensure 404.html exists in the build output directory
+          if [ ! -f "./dist/404.html" ]; then
+            echo "404.html not found in ./dist, please check your build process."
+            exit 1
+          fi
       - name: Setup Pages
         uses: actions/configure-pages@v4
       - name: Upload artifact
