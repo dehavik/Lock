@@ -14,15 +14,13 @@ import { useUserStore } from './stores/user'
 
 const app = createApp(App)
 
-console.log(window.location.origin)
-
 const msalConfig: Configuration = {
   auth: {
     clientId: '945351f2-1778-4768-a475-ae9c490868b5',
     authority:
       'https://login.microsoftonline.com/7bad5a3a-3e76-4559-bcf6-8a6039c7f8d2',
-    redirectUri: 'https://dehavik.github.io/MicrosoftKeeoSync/', // Must be registered as a SPA redirectURI on your app registration
-    postLogoutRedirectUri: 'https://dehavik.github.io/MicrosoftKeeoSync/', // Must be registered as a SPA redirectURI on your app registration
+    redirectUri: window.location.origin + '/MicrosoftKeeoSync', // Must be registered as a SPA redirectURI on your app registration
+    postLogoutRedirectUri: window.location.origin + '/MicrosoftKeeoSync', // Must be registered as a SPA redirectURI on your app registration
   },
   cache: {
     cacheLocation: 'sessionStorage', // possible options: localStorage, sessionStorage, memory

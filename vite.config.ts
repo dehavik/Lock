@@ -6,7 +6,7 @@ import vueDevTools from 'vite-plugin-vue-devtools'
 
 // https://vite.dev/config/
 export default defineConfig({
-  base: '/MicrosoftKeeoSync/',
+  base: '/MicrosoftKeeoSync',
   plugins: [vue(), vueDevTools()],
   resolve: {
     alias: {
