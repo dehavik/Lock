@@ -44,10 +44,18 @@ const logoutRedirect = () => {
         </li>
         <li>
           <RouterLink
-            to="/profile"
+            to="/microsoft"
             active-class="border-b-2 border-cyan-600"
             class="py-1"
-            >Profile</RouterLink
+            >Microsoft</RouterLink
+          >
+        </li>
+        <li>
+          <RouterLink
+            to="/keeo"
+            active-class="border-b-2 border-cyan-600"
+            class="py-1"
+            >Keeo</RouterLink
           >
         </li>
       </ul>
