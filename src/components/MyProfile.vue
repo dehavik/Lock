@@ -6,8 +6,10 @@ import { useMsal, useMsalAuthentication } from 'vue3-msal-plugin'
 import { InteractionType } from '@azure/msal-browser'
 import type { UserInfo } from '@/types/user-info'
 
-const { callMsGraph, loginRequest } = useMsal()
-const { result } = useMsalAuthentication(InteractionType.Silent, loginRequest)
+const { callMsGraph } = useMsal()
+const { result } = useMsalAuthentication(InteractionType.Redirect, {
+  scopes: ['https://service.flow.microsoft.com//.default'],
+})
 
 const msGraphData: Ref<UserInfo | null> = ref(null)
 
@@ -16,6 +18,20 @@ watch(result, async newValue => {
     try {
       const response = await callMsGraph(newValue?.accessToken)
       msGraphData.value = response
+    } catch (error) {
+      console.error(error)
+    }
+
+    try {
+      const response = await fetch(
+        'https://prod-188.westeurope.logic.azure.com:443/workflows/807fffce2394427dba55cae3313799d1/triggers/manual/paths/invoke?api-version=2016-06-01',
+        {
+          headers: {
+            Authorization: `Bearer ${newValue?.accessToken}`,
+          },
+        },
+      )
+      console.log(response)
     } catch (error) {
       console.error(error)
     }
