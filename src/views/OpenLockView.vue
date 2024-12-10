@@ -37,6 +37,7 @@ watch(result, async newValue => {
 
 const showModal = ref(false)
 const modalMessage = ref('')
+const modalTitle = ref('')
 
 const requestOneTimePincode = () => {
   if (accessToken == '') {
@@ -61,6 +62,7 @@ const closeModal = () => {
 const fetchData = async () => {
   loading.value = true
   let text = ''
+  let title = 'Mislukt'
   try {
     const response = await fetch(
       'https://prod-49.westeurope.logic.azure.com:443/workflows/2e1954e6f56e438dbb5e1253de7131a4/triggers/manual/paths/invoke?api-version=2016-06-01',
@@ -81,7 +83,8 @@ const fetchData = async () => {
     try {
       const code = parseInt(data)
       if (!isNaN(code)) {
-        text = `De code is ${code}, je kan deze slechts 1 keer gebruiken. De code is 24u geldig.`
+        text = `Noteer zeker elke cash-transactie op het blad.`
+        title = `Éénmalige code: ${code}`
       } else {
         text = data
       }
@@ -93,6 +96,7 @@ const fetchData = async () => {
   } finally {
     // empty text input
     reason.value = ''
+    modalTitle.value = title
     modalMessage.value = text
     showModal.value = true
     loading.value = false
@@ -149,7 +153,7 @@ const fetchData = async () => {
     <Modal
       v-if="showModal"
       :show="showModal"
-      title="One-Time Pincode"
+      :title="modalTitle"
       :message="modalMessage"
       @close="closeModal"
     />
