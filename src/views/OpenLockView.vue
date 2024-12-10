@@ -134,20 +134,14 @@ const fetchData = async () => {
         ></textarea>
       </div>
       <div class="flex items-center justify-between">
-        <div>
-          <button
-            :disabled="loading"
-            @click="fetchData"
-            :class="{ loading: loading }"
-          >
-            <span v-if="loading" class="spinner"></span>
-            <span
-              v-else
-              class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
-              >Vraag code</span
-            >
-          </button>
-        </div>
+        <button
+          :disabled="loading"
+          @click="fetchData"
+          class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline flex items-center justify-center"
+        >
+          <span v-if="loading" class="spinner mr-2"></span>
+          <span>{{ loading ? 'Laden...' : 'Vraag code' }}</span>
+        </button>
       </div>
     </form>
     <Modal
