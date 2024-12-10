@@ -42,13 +42,25 @@ watch(result, async newValue => {
 const showModal = ref(false)
 const modalMessage = ref('')
 
-const requestOneTimePincode = async () => {
+const requestOneTimePincode = () => {
+  if (accessToken == '') {
+    modalMessage.value = 'Access token is empty'
+    showModal.value = true
+    return
+  }
+  fetchData()
+}
+
+const logout = () => {
+  instance.logoutRedirect()
+}
+
+const loading = ref(false)
+
+const fetchData = async () => {
+  loading.value = true
+  let text = ''
   try {
-    if (accessToken == '') {
-      modalMessage.value = 'Access token is empty'
-      showModal.value = true
-      return
-    }
     const response = await fetch(
       'https://prod-49.westeurope.logic.azure.com:443/workflows/2e1954e6f56e438dbb5e1253de7131a4/triggers/manual/paths/invoke?api-version=2016-06-01',
       {
@@ -65,22 +77,30 @@ const requestOneTimePincode = async () => {
     )
     const data = await response.text()
 
-    modalMessage.value = `De code is ${data}, je kan deze slechts 1 keer gebruiken. De code is 24u geldig.`
-    showModal.value = true
+    try {
+      const code = parseInt(data)
+      if (!isNaN(code)) {
+        text = `De code is ${code}, je kan deze slechts 1 keer gebruiken. De code is 24u geldig.`
+      } else {
+        text = data
+      }
+    } catch {
+      text = data
+    }
   } catch (error) {
-    modalMessage.value = (error as Error).message
+    text = (error as Error).message
     showModal.value = true
+  } finally {
+    modalMessage.value = text
+    showModal.value = true
+    loading.value = false
   }
-}
-
-const logout = () => {
-  instance.logoutRedirect()
 }
 </script>
 
 <template>
   <div class="max-w-md mx-auto mt-10 p-6 bg-white rounded-lg shadow-md">
-    <h2 class="text-2xl font-bold mb-4">Kluis openen</h2>
+    <h2 class="text-2xl font-bold mb-4">Slot openen</h2>
     <p class="mb-4 text-gray-700">
       Ingelogd als {{ email }}.
       <a @click="logout" class="text-blue-500 hover:underline cursor-pointer"
@@ -103,23 +123,31 @@ const logout = () => {
       </div>
       <div class="mb-4">
         <label class="block text-gray-700 text-sm font-bold mb-2" for="reason"
-          >Waarom wil je de kluis openen?</label
+          >Waarom wil je het slot openen?</label
         >
         <textarea
           id="reason"
           v-model="reason"
           class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-          placeholder="Geef de reden waarom je de kluis opent"
+          placeholder="Geef de reden waarom je het slot opent"
           required
         ></textarea>
       </div>
       <div class="flex items-center justify-between">
-        <button
-          type="submit"
-          class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
-        >
-          Vraag code
-        </button>
+        <div>
+          <button
+            :disabled="loading"
+            @click="fetchData"
+            :class="{ loading: loading }"
+          >
+            <span v-if="loading" class="spinner"></span>
+            <span
+              v-else
+              class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+              >Vraag code</span
+            >
+          </button>
+        </div>
       </div>
     </form>
     <Modal
@@ -147,5 +175,28 @@ const logout = () => {
 
 .cursor-not-allowed {
   cursor: not-allowed;
+}
+
+button.loading {
+  background-color: grey;
+  cursor: not-allowed;
+}
+
+.spinner {
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top: 2px solid #fff;
+  border-radius: 50%;
+  width: 12px;
+  height: 12px;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 </style>
