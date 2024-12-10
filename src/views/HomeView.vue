@@ -40,30 +40,38 @@ const openLock = () => {
     <div class="text-center">
       <div v-if="isAuthenticated">
         <h1 class="text-4xl font-bold mb-8">
-          Welcome {{ user?.username?.replace('@dehavik.be', '') }}!
+          Welkom
+          {{
+            user?.username
+              ?.replace('@dehavik.be', '')
+              .replace('.', ' ')
+              .split(' ')
+              .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+              .join(' ')
+          }}!
         </h1>
         <div class="flex space-x-4">
           <button
             @click="openLock"
             class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
           >
-            Open kluis
+            Open slot
           </button>
           <button
             @click="logout"
             class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
           >
-            Log out
+            Uitloggen
           </button>
         </div>
       </div>
       <div v-else>
-        <h1 class="text-4xl font-bold mb-8">De Havik Kluis</h1>
+        <h1 class="text-4xl font-bold mb-8">Welkom!</h1>
         <button
           @click="login"
           class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
         >
-          Login
+          Login met je Havik-account
         </button>
       </div>
     </div>
