@@ -50,7 +50,7 @@ const openLock = () => {
               .join(' ')
           }}!
         </h1>
-        <div class="flex space-x-4">
+        <div class="flex justify-center space-x-4">
           <button
             @click="openLock"
             class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
@@ -81,5 +81,21 @@ const openLock = () => {
 <style scoped>
 .min-h-screen {
   min-height: 100vh;
+
+  .min-h-screen {
+    min-height: 100vh;
+  }
+}
+
+.flex {
+  display: flex;
+}
+
+.items-center {
+  align-items: center;
+}
+
+.justify-center {
+  justify-content: center;
 }
 </style>
