@@ -9,18 +9,8 @@ console.log('inProgress', inProgress.value)
 
 const isAuthenticated = useIsAuthenticated()
 
-const loginPopup = () => {
-  instance.loginPopup(loginRequest)
-}
-
 const loginRedirect = () => {
   instance.loginRedirect(loginRequest)
-}
-
-const logoutPopup = () => {
-  instance.logoutPopup({
-    mainWindowRedirectUri: '/',
-  })
 }
 
 const logoutRedirect = () => {

@@ -1,0 +1,151 @@
+<script setup lang="ts">
+import { ref, watch } from 'vue'
+import { useUserStore } from '@/stores/user'
+import { storeToRefs } from 'pinia'
+import { useRouter } from 'vue-router'
+import {
+  useIsAuthenticated,
+  useMsal,
+  useMsalAuthentication,
+} from 'vue3-msal-plugin'
+import { InteractionType } from '@azure/msal-browser'
+import Modal from '@/components/ModalView.vue'
+
+const isAuthenticated = useIsAuthenticated()
+const { user } = storeToRefs(useUserStore())
+const { instance, accounts, inProgress } = useMsal()
+const router = useRouter()
+
+if (!isAuthenticated.value) {
+  router.push({ path: '/' })
+}
+
+console.log(instance)
+console.log(accounts)
+console.log(inProgress)
+
+const email = ref(user.value?.username || '')
+const reason = ref('')
+
+const { result } = useMsalAuthentication(InteractionType.Redirect, {
+  scopes: ['https://service.flow.microsoft.com//.default'],
+})
+
+let accessToken = ''
+
+watch(result, async newValue => {
+  if (newValue?.accessToken) {
+    accessToken = newValue.accessToken
+  }
+})
+
+const showModal = ref(false)
+const modalMessage = ref('')
+
+const requestOneTimePincode = async () => {
+  try {
+    if (accessToken == '') {
+      modalMessage.value = 'Access token is empty'
+      showModal.value = true
+      return
+    }
+    const response = await fetch(
+      'https://prod-49.westeurope.logic.azure.com:443/workflows/2e1954e6f56e438dbb5e1253de7131a4/triggers/manual/paths/invoke?api-version=2016-06-01',
+      {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          user: email.value,
+          note: reason.value,
+        }),
+      },
+    )
+    const data = await response.text()
+
+    modalMessage.value = `De code is ${data}, je kan deze slechts 1 keer gebruiken. De code is 24u geldig.`
+    showModal.value = true
+  } catch (error) {
+    modalMessage.value = (error as Error).message
+    showModal.value = true
+  }
+}
+
+const logout = () => {
+  instance.logoutRedirect()
+}
+</script>
+
+<template>
+  <div class="max-w-md mx-auto mt-10 p-6 bg-white rounded-lg shadow-md">
+    <h2 class="text-2xl font-bold mb-4">Kluis openen</h2>
+    <p class="mb-4 text-gray-700">
+      Ingelogd als {{ email }}.
+      <a @click="logout" class="text-blue-500 hover:underline cursor-pointer"
+        >Log uit</a
+      >
+    </p>
+    <form @submit.prevent="requestOneTimePincode">
+      <div class="mb-4">
+        <label class="block text-gray-700 text-sm font-bold mb-2" for="email"
+          >Emailadres</label
+        >
+        <input
+          type="email"
+          id="email"
+          v-model="email"
+          class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline bg-gray-200 cursor-not-allowed"
+          required
+          readonly
+        />
+      </div>
+      <div class="mb-4">
+        <label class="block text-gray-700 text-sm font-bold mb-2" for="reason"
+          >Waarom wil je de kluis openen?</label
+        >
+        <textarea
+          id="reason"
+          v-model="reason"
+          class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+          placeholder="Geef de reden waarom je de kluis opent"
+          required
+        ></textarea>
+      </div>
+      <div class="flex items-center justify-between">
+        <button
+          type="submit"
+          class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+        >
+          Vraag code
+        </button>
+      </div>
+    </form>
+    <Modal
+      v-if="showModal"
+      :show="showModal"
+      title="One-Time Pincode"
+      :message="modalMessage"
+      @close="showModal = false"
+    />
+  </div>
+</template>
+
+<style scoped>
+.min-h-screen {
+  min-height: 100vh;
+}
+
+.max-w-md {
+  max-width: 28rem;
+}
+
+.bg-gray-200 {
+  background-color: #e2e8f0;
+}
+
+.cursor-not-allowed {
+  cursor: not-allowed;
+}
+</style>

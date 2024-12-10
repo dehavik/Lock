@@ -1,7 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import HomeView from '../views/HomeView.vue'
-import KeeoView from '../views/KeeoView.vue'
 import NotFoundView from '@/views/NotFoundView.vue'
+import HomeView from '@/views/HomeView.vue'
+import openLockView from '@/views/OpenLockView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -12,20 +12,9 @@ const router = createRouter({
       component: HomeView,
     },
     {
-      path: '/microsoft',
-      name: 'Microsoft',
-      // route level code-splitting
-      // this generates a separate chunk (About.[hash].js) for this route
-      // which is lazy-loaded when the route is visited.
-      component: () => import('../views/MicrosoftView.vue'),
-    },
-    {
-      path: '/keeo',
-      name: 'Keeo',
-      // route keeo code-splitting
-      // this generates a separate chunk (About.[hash].js) for this route
-      // which is lazy-loaded when the route is visited.
-      component: KeeoView,
+      path: '/open',
+      name: 'openLock',
+      component: openLockView,
     },
     {
       path: '/:catchAll(.*)',
