@@ -13,16 +13,12 @@ import Modal from '@/components/ModalView.vue'
 
 const isAuthenticated = useIsAuthenticated()
 const { user } = storeToRefs(useUserStore())
-const { instance, accounts, inProgress } = useMsal()
+const { instance } = useMsal()
 const router = useRouter()
 
 if (!isAuthenticated.value) {
   router.push({ path: '/' })
 }
-
-console.log(instance)
-console.log(accounts)
-console.log(inProgress)
 
 const email = ref(user.value?.username || '')
 const reason = ref('')
@@ -57,6 +53,11 @@ const logout = () => {
 
 const loading = ref(false)
 
+const closeModal = () => {
+  showModal.value = false
+  router.push('/')
+}
+
 const fetchData = async () => {
   loading.value = true
   let text = ''
@@ -90,6 +91,8 @@ const fetchData = async () => {
   } catch (error) {
     text = (error as Error).message
   } finally {
+    // empty text input
+    reason.value = ''
     modalMessage.value = text
     showModal.value = true
     loading.value = false
@@ -148,7 +151,7 @@ const fetchData = async () => {
       :show="showModal"
       title="One-Time Pincode"
       :message="modalMessage"
-      @close="showModal = false"
+      @close="closeModal"
     />
   </div>
 </template>

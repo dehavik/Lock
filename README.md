@@ -1,6 +1,6 @@
-# Microsoft Keeo Sync
+# De Havik Slot
 
-Leverage the [Microsoft Graph API](https://developer.microsoft.com/en-us/graph) and the [Stamhoofd API](https://www.stamhoofd.be/docs/api/), to synchronize accounts between Microsoft 365 and Keeo 3.0. 
+INSERT PHOTO
 
 ## Project Setup
 
