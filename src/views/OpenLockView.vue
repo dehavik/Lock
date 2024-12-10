@@ -89,7 +89,6 @@ const fetchData = async () => {
     }
   } catch (error) {
     text = (error as Error).message
-    showModal.value = true
   } finally {
     modalMessage.value = text
     showModal.value = true
