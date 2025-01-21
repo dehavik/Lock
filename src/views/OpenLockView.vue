@@ -83,7 +83,7 @@ const fetchData = async () => {
     try {
       const code = parseInt(data)
       if (!isNaN(code)) {
-        text = `Noteer zeker elke cash-transactie op het blad.`
+        text = `Noteer zeker elke cash-transactie op het papierenblad.`
         title = `Éénmalige code: ${data}`
       } else {
         text = data
