@@ -1,7 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import NotFoundView from '@/views/NotFoundView.vue'
-import HomeView from '@/views/HomeView.vue'
-import openLockView from '@/views/OpenLockView.vue'
+import NotFoundView from '@/views/NotFound.vue'
+import HomeView from '@/views/Home.vue'
+import openLockView from '@/views/OpenLock.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
